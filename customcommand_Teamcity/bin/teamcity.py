@@ -54,22 +54,21 @@ def form_xml_content(conf_id):
     """
     build = xml.Element('build')
     buildType = xml.SubElement(build, 'buildType')
-    agent = xml.SubElement(build, 'agent')
-    comment = xml.SubElement(build, 'comment')
-    text = xml.SubElement(comment, 'text')
-    properties = xml.SubElement(build, 'properties')
-    property = xml.SubElement(properties, 'property')
-    build.set('personal', 'true')
-    build.set('branchName', 'logicBuildBranch')
-    # static configure buildConfID here
+    #agent = xml.SubElement(build, 'agent')
+    #comment = xml.SubElement(build, 'comment')
+    #text = xml.SubElement(comment, 'text')
+    #properties = xml.SubElement(build, 'properties')
+    #property = xml.SubElement(properties, 'property')
+    #build.set('personal', 'true')
+    #build.set('branchName', 'logicBuildBranch')
+    ## static configure buildConfID here
     buildType.set('id', 'buildConfID')
-    agent.set('id', '3')
-    text.text = "build triggering comment"
-    property.set("name", "env.myEnv")
-    property.set("value", conf_id)
-
+    #agent.set('id', '3')
+    #text.text = "build triggering comment"
+    #property.set("name", "env.myEnv")
+    #property.set("value", conf_id)
+    
     my_xml_data = xml.tostring(build)
-
     return my_xml_data
 
 def teamcity_run_build_remote(base_url=None, user=None, passwd=None, conf_id=None):
@@ -117,8 +116,7 @@ def teamcity_run_build_remote(base_url=None, user=None, passwd=None, conf_id=Non
         return build_number    
     except requests.exceptions.RequestException:
         logger.debug('HTTP Request {} failed'.format(url))
-        return 'HTTP Request {} failed'.format(url)       
-
+        return 'HTTP Request {} failed'.format(url)      
 
 base_url = None
 user = None
@@ -126,13 +124,11 @@ passwd = None
 common_path = 'httpAuth/app/rest'
 
 newresults = []
-
 results, dummyresults, settings = splunk.Intersplunk.getOrganizedResults()
 
 try:
     keywords, argvals = splunk.Intersplunk.getKeywordsAndOptions()
     logger.debug('Argument passed %s' % argvals["id"])
-
     key_column = argvals["id"]
     for result in results:
         tmp_result = result
@@ -141,10 +137,9 @@ try:
            tmp_result["status"] = teamcity_run_build_remote(base_url=base_url, user=user, passwd=passwd, conf_id=result[key_column])
         else:
            tmp_result["status"] = "conf id not found"
-
         newresults.append(tmp_result)
 
 except Exception as e:
     logger.error(e)
-
+    
 splunk.Intersplunk.outputResults(newresults)
