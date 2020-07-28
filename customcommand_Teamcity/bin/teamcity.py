@@ -81,9 +81,9 @@ def teamcity_run_build_remote(base_url=None, user=None, passwd=None, conf_id=Non
     :return:
     """
     xml_response = None
+
     xml_data = form_xml_content(conf_id)
-    status = None
-    build_id = None
+
     # trigger build
     url = '{}/{}/buildQueue'.format(base_url, common_path)
     try:
@@ -99,15 +99,27 @@ def teamcity_run_build_remote(base_url=None, user=None, passwd=None, conf_id=Non
 
     # get build id
     build_id = xml_response.attrib['id']
-    logger.debug(" build_id={} ".format(build_id))
+    logger.debug("build_id={}".format(build_id))
 
-    if build_id :
-        status = build_id
-    else:
-        status = "build_id Not Found"
-    return status
+    url += '/id:{}'.format(build_id)
+    state = None
+    status = None
+    build_number = None
+    # monitor build state
 
-#Update static value here
+    try:
+        logger.debug("Getting build status, build_id={}, POST url={}".format(build_id, url))
+        response = requests.get(url, auth=HTTPBasicAuth(user, passwd), headers={"Content-Type": "application/xml"})
+        xml_response = xml.fromstring(response.content)
+        del response
+        build_number = xml_response.attrib['number']
+        state = xml_response.attrib['state']
+        return build_number    
+    except requests.exceptions.RequestException:
+        logger.debug('HTTP Request {} failed'.format(url))
+        return 'HTTP Request {} failed'.format(url)       
+
+
 base_url = None
 user = None
 passwd = None
@@ -129,7 +141,9 @@ try:
            tmp_result["status"] = teamcity_run_build_remote(base_url=base_url, user=user, passwd=passwd, conf_id=result[key_column])
         else:
            tmp_result["status"] = "conf id not found"
+
         newresults.append(tmp_result)
+
 except Exception as e:
     logger.error(e)
 
